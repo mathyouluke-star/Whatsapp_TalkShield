@@ -4,7 +4,7 @@
 ## 📄 `Dockerfile`
 #If you prefer containerised deployment (Render supports both Procfile and Dockerfile):
 
-```dockerfile
+#```dockerfile
 # Use official Python image
 FROM python:3.10-slim
 
