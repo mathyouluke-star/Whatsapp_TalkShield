@@ -7,7 +7,7 @@ HF_HEADERS = {"Authorization": f"Bearer " + os.environ.get("HF_TOKEN")}
 
 app = Flask(__name__)
 
-SPACE_URL = "https://Sekhinah-talkshield-api.hf.space/run/predict"
+SPACE_URL = "https://Sekhinah-talkshield-api.hf.space"
 
 def check_toxicity(text: str):
     try:
