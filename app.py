@@ -1,10 +1,13 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import requests
+import requests, threading, time, os
 
 SPACE_URL = "https://Sekhinah-talkshield-api.hf.space"
 DEFAULT_THRESHOLD = 0.5
 
+# ──────────────────────────────
+# Flask app
+# ──────────────────────────────
 app = Flask(__name__)
 
 # ──────────────────────────────
@@ -41,7 +44,7 @@ def format_twi(result: dict) -> str:
     return f"Prediction: {pred}\n" + "\n".join(lines)
 
 # ──────────────────────────────
-# WhatsApp Webhook
+# WhatsApp webhook
 # ──────────────────────────────
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_webhook():
@@ -52,7 +55,6 @@ def whatsapp_webhook():
         reply.message("⚠️ Empty message received.")
         return str(reply)
 
-    # Decide Twi or English
     if is_twi_like(msg):
         result = call_space("/twi", {"text": msg})
         pretty = format_twi(result)
@@ -64,10 +66,28 @@ def whatsapp_webhook():
 
     return str(reply)
 
-# Optional root route for browser check
 @app.route("/")
 def index():
     return "✅ WhatsApp TalkShield service is alive", 200
 
+# ──────────────────────────────
+# Keep-alive thread
+# ──────────────────────────────
+APP_URL = os.environ.get("APP_URL", "https://whatsapp-talkshield.onrender.com")
+
+def keep_alive():
+    while True:
+        try:
+            requests.get(APP_URL, timeout=10)
+            print("✅ Self-ping sent to keep service alive")
+        except Exception as e:
+            print("⚠️ Keep-alive ping failed:", e)
+        time.sleep(300)  # every 5 minutes
+
+threading.Thread(target=keep_alive, daemon=True).start()
+
+# ──────────────────────────────
+# Entrypoint
+# ──────────────────────────────
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
