@@ -9,7 +9,11 @@ app = Flask(__name__)
 
 def check_toxicity(text: str):
     r = requests.post(HF_URL, headers=HF_HEADERS, json={"inputs": text})
-    return r.json()
+    try:
+        return r.json()
+    except Exception:
+        return {"error": r.text, "status": r.status_code}
+
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_webhook():
