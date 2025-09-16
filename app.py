@@ -22,16 +22,25 @@ def whatsapp_webhook():
 
     result = check_toxicity(msg)
 
-    # filter labels above 0.3 threshold
-    flagged = [k for k,v in result[0].items() if v > 0.3]
+    reply = MessagingResponse()
 
-    resp = MessagingResponse()
-    if flagged:
-        resp.message(f"⚠️ Message flagged for: {', '.join(flagged)}")
+    # Case 1: Hugging Face returned an error
+    if "error" in result:
+        reply.message(f"⚠️ Model error: {result['error']} (status: {result.get('status', 'unknown')})")
+        return str(reply)
+
+    # Case 2: Normal response (list of predictions)
+    if isinstance(result, list) and len(result) > 0:
+        flagged = [k for k, v in result[0].items() if v > 0.3]
+        if flagged:
+            reply.message(f"⚠️ Message flagged for: {', '.join(flagged)}")
+        else:
+            reply.message("✅ Message looks fine!")
     else:
-        resp.message("✅ Message looks fine!")
+        reply.message("⚠️ Unexpected response from moderation API.")
 
-    return str(resp)
+    return str(reply)
+
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
